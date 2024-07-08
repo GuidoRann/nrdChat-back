@@ -29,5 +29,11 @@ public class UserChat {
     private UserState userState;
 
     @OneToMany(mappedBy = "user")
-    private List<Friend> friendList;
+    private List<FriendEntity> friendEntityList;
+
+    @OneToMany(mappedBy = "sender")
+    private List<MessageEntity> sentMessageEntities;
+
+    @OneToMany(mappedBy = "receiver")
+    private List<MessageEntity> receivedMessageEntities;
 }

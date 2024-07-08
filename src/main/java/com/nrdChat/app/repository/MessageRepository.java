@@ -1,9 +1,9 @@
 package com.nrdChat.app.repository;
 
-import com.nrdChat.app.model.FriendEntity;
+import com.nrdChat.app.model.MessageEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface FriendRepository extends JpaRepository<FriendEntity, Long> {
+public interface MessageRepository extends JpaRepository<MessageEntity, Long> {
 }

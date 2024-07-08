@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class Friend {
+public class FriendEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
