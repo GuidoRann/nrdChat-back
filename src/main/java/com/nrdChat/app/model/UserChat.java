@@ -19,7 +19,7 @@ public class UserChat {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long userId;
-    private String nickName;
+    private String userName;
     
     @Column(unique = true, nullable = false)
     private String email;

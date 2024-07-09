@@ -17,7 +17,7 @@ public class UserChatService implements IUserChatService {
     public UserDTO createUser(UserDTO userDTO) {
 
         UserChat userChat = UserChat.builder()
-                .nickName(userDTO.getNickName())
+                .userName(userDTO.getUsername())
                 .email(userDTO.getEmail())
                 .password(userDTO.getPassword())
                 .friendEntityList(null)
