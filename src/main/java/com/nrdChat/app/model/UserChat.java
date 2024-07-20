@@ -19,7 +19,7 @@ public class UserChat {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long userId;
-    private String userName;
+    private String username;
     
     @Column(unique = true, nullable = false)
     private String email;
@@ -31,9 +31,4 @@ public class UserChat {
     @OneToMany(mappedBy = "user")
     private List<FriendEntity> friendEntityList;
 
-    @OneToMany(mappedBy = "sender")
-    private List<MessageEntity> sentMessageEntities;
-
-    @OneToMany(mappedBy = "receiver")
-    private List<MessageEntity> receivedMessageEntities;
 }

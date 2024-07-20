@@ -7,6 +7,8 @@ import com.nrdChat.app.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+
 @Service
 public class UserChatService implements IUserChatService {
 
@@ -17,12 +19,10 @@ public class UserChatService implements IUserChatService {
     public UserDTO createUser(UserDTO userDTO) {
 
         UserChat userChat = UserChat.builder()
-                .userName(userDTO.getUsername())
+                .username(userDTO.getUsername())
                 .email(userDTO.getEmail())
                 .password(userDTO.getPassword())
-                .friendEntityList(null)
-                .sentMessageEntities(null)
-                .receivedMessageEntities(null)
+                .friendEntityList(new ArrayList<>())
                 .userState(UserState.OFFLINE)
                 .build();
 
