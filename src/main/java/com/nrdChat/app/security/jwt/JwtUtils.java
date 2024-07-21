@@ -2,7 +2,6 @@ package com.nrdChat.app.security.jwt;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
@@ -17,11 +16,12 @@ import java.util.function.Function;
 @Component
 public class JwtUtils {
 
+
     private final SecretKey key;
     private static final long EXPIRATION_TIME = 86400000; //24 hours
 
     public JwtUtils() {
-        String secretString = "e11ad92422d311a095b99d3b3468833b3827f1ec7ceba12596d1237cc1fb515d";
+        String secretString = System.getenv("SECRET_STRING");
         byte[] keyBytes = Base64.getDecoder().decode(secretString.getBytes(StandardCharsets.UTF_8));
         this.key = new SecretKeySpec(keyBytes, "HmacSHA256");
     }
