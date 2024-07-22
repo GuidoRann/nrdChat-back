@@ -5,6 +5,7 @@ import com.nrdChat.app.enums.UserState;
 import com.nrdChat.app.model.UserChat;
 import com.nrdChat.app.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -28,5 +29,13 @@ public class UserChatService implements IUserChatService {
 
         userRepository.save(userChat);
         return userDTO;
+    }
+
+    public ResponseEntity<UserDTO> loginUser (UserDTO userDTO) {
+
+        UserChat userChat = userRepository.findByEmail(userDTO.getEmail()).get();
+        userChat.setUserState(UserState.ONLINE);
+
+        return ResponseEntity.ok(userDTO);
     }
 }
