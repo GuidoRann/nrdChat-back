@@ -1,6 +1,7 @@
 package com.nrdChat.app.service;
 
-import com.nrdChat.app.dtos.ReqRes;
+import com.nrdChat.app.dtos.UserDTO;
+import com.nrdChat.app.enums.UserRole;
 import com.nrdChat.app.enums.UserState;
 import com.nrdChat.app.model.UserChat;
 import com.nrdChat.app.repository.UserRepository;
@@ -16,7 +17,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
-public class UserManagementService {
+public class UserManagementService implements IUserManagmentService {
 
     @Autowired
     private UserRepository userRepository;
@@ -30,14 +31,16 @@ public class UserManagementService {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-    public ReqRes registerUser(ReqRes registrationRequest) {
-        ReqRes resp = new ReqRes();
+    @Override
+    public UserDTO registerUser(UserDTO registrationRequest) {
+        UserDTO resp = new UserDTO();
 
         try {
             UserChat userChat = UserChat.builder()
                     .username(registrationRequest.getUsername())
                     .email(registrationRequest.getEmail())
                     .password(passwordEncoder.encode(registrationRequest.getPassword()))
+                    .role(UserRole.USER.toString())
                     .userState(UserState.OFFLINE)
                     .build();
 
@@ -58,8 +61,9 @@ public class UserManagementService {
         return resp;
     }
 
-    public ReqRes loginUser(ReqRes loginRequest) {
-        ReqRes resp = new ReqRes();
+    @Override
+    public UserDTO loginUser(UserDTO loginRequest) {
+        UserDTO resp = new UserDTO();
         try {
             authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
@@ -72,6 +76,7 @@ public class UserManagementService {
 
             resp.setStatusCode(200);
             resp.setToken(token);
+            resp.setRole(user.getRole());
             resp.setRefreshToken(refreshToken);
             resp.setExpirationTime("24h");
             resp.setMessage("User logged in successfully");
@@ -84,8 +89,9 @@ public class UserManagementService {
         return resp;
     }
 
-    public ReqRes refreshToken(ReqRes refreshTokenRequest) {
-        ReqRes resp = new ReqRes();
+    @Override
+    public UserDTO refreshToken(UserDTO refreshTokenRequest) {
+        UserDTO resp = new UserDTO();
         try {
             String userEmail = jwtUtils.extractUsername(refreshTokenRequest.getRefreshToken());
             var user = userRepository.findByEmail(userEmail).orElseThrow();
@@ -110,8 +116,9 @@ public class UserManagementService {
         }
     }
 
-    public ReqRes getAllUsers(){
-        ReqRes resp = new ReqRes();
+    @Override
+    public UserDTO getAllUsers(){
+        UserDTO resp = new UserDTO();
         try {
             List<UserChat> userChatList = userRepository.findAll();
             if(!userChatList.isEmpty()){
@@ -132,8 +139,9 @@ public class UserManagementService {
         }
     }
 
-    public ReqRes getUserById (Long userId){
-        ReqRes resp = new ReqRes();
+    @Override
+    public UserDTO getUserById (Long userId){
+        UserDTO resp = new UserDTO();
         try {
             UserChat user = userRepository.findById(userId).orElseThrow( () -> new RuntimeException("User not found")); ;
             resp.setUserChat(user);
@@ -147,8 +155,9 @@ public class UserManagementService {
         return resp;
     }
 
-    public ReqRes deleteUserById (Long userId){
-        ReqRes resp = new ReqRes();
+    @Override
+    public UserDTO deleteUserById (Long userId){
+        UserDTO resp = new UserDTO();
         try {
             Optional<UserChat> user = userRepository.findById(userId);
             if(user.isPresent()){
@@ -167,8 +176,9 @@ public class UserManagementService {
         return resp;
     }
 
-    public ReqRes updateUser(Long userId, UserChat updatedUserChat){
-        ReqRes resp = new ReqRes();
+    @Override
+    public UserDTO updateUser(Long userId, UserChat updatedUserChat){
+        UserDTO resp = new UserDTO();
         try {
             Optional<UserChat> user = userRepository.findById(userId);
             if(user.isPresent()){
@@ -201,8 +211,9 @@ public class UserManagementService {
         return resp;
     }
 
-    public ReqRes getMyInfo(String email){
-        ReqRes resp = new ReqRes();
+    @Override
+    public UserDTO getMyInfo(String email){
+        UserDTO resp = new UserDTO();
         try {
             Optional<UserChat> user = userRepository.findByEmail(email);
             if(user.isPresent()){
@@ -220,6 +231,4 @@ public class UserManagementService {
         }
         return resp;
     }
-
-
 }

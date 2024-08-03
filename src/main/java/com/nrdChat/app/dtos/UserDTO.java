@@ -12,7 +12,7 @@ import java.util.List;
 @Data
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class ReqRes {
+public class UserDTO {
 
     private int statusCode;
     private String error;
@@ -23,7 +23,7 @@ public class ReqRes {
     private String username;
     private String email;
     private UserState userState;
-    private UserRole role;
+    private String role;
     private String password;
     private UserChat userChat;
     private List<UserChat> userChatList;

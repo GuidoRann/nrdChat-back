@@ -36,11 +36,11 @@ public class UserChat implements UserDetails {
     @OneToMany(mappedBy = "user")
     private List<FriendEntity> friendEntityList;
 
-    private UserRole role;
+    private String role;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(new SimpleGrantedAuthority(role.name()));
+        return List.of(new SimpleGrantedAuthority(role));
     }
 
     @Override
