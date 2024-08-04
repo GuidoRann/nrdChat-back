@@ -6,6 +6,7 @@ import com.nrdChat.app.enums.UserState;
 import com.nrdChat.app.model.UserChat;
 import com.nrdChat.app.repository.UserRepository;
 import com.nrdChat.app.security.jwt.JwtUtils;
+import com.nrdChat.config.SecurityConfig;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -29,7 +30,7 @@ public class UserManagementService implements IUserManagmentService {
     private AuthenticationManager authenticationManager;
 
     @Autowired
-    private PasswordEncoder passwordEncoder;
+    private SecurityConfig securityConfig;
 
     @Override
     public UserDTO registerUser(UserDTO registrationRequest) {
@@ -39,7 +40,7 @@ public class UserManagementService implements IUserManagmentService {
             UserChat userChat = UserChat.builder()
                     .username(registrationRequest.getUsername())
                     .email(registrationRequest.getEmail())
-                    .password(passwordEncoder.encode(registrationRequest.getPassword()))
+                    .password(securityConfig.passwordEncoder().encode(registrationRequest.getPassword()))
                     .role(UserRole.USER.toString())
                     .userState(UserState.OFFLINE)
                     .build();
@@ -70,18 +71,23 @@ public class UserManagementService implements IUserManagmentService {
                             loginRequest.getEmail(), loginRequest.getPassword()
                     )
             );
-            var user = userRepository.findByEmail(loginRequest.getEmail()).orElseThrow();
-            var token = jwtUtils.generateToken(user);
-            var refreshToken = jwtUtils.generateRefreshToken(new HashMap<>(), user);
+            Optional<UserChat> userOpt = userRepository.findByEmail(loginRequest.getEmail());
+            if (userOpt.isPresent()) {
+                var user = userOpt.get();
+                var token = jwtUtils.generateToken(user);
+                var refreshToken = jwtUtils.generateRefreshToken(new HashMap<>(), user);
 
-            resp.setStatusCode(200);
-            resp.setToken(token);
-            resp.setRole(user.getRole());
-            resp.setRefreshToken(refreshToken);
-            resp.setExpirationTime("24h");
-            resp.setMessage("User logged in successfully");
-            user.setUserState(UserState.ONLINE);
-
+                resp.setStatusCode(200);
+                resp.setToken(token);
+                resp.setRole(user.getRole());
+                resp.setRefreshToken(refreshToken);
+                resp.setExpirationTime("24h");
+                resp.setMessage("User logged in successfully");
+                user.setUserState(UserState.ONLINE);
+            } else {
+                resp.setStatusCode(401);
+                resp.setMessage("Invalid email or password");
+            }
         } catch (Exception e) {
             resp.setStatusCode(500);
             resp.setMessage(e.getMessage());
@@ -193,7 +199,7 @@ public class UserManagementService implements IUserManagmentService {
                 //Check if password is not null and not empty
                 if(updatedUserChat.getPassword() != null && !updatedUserChat.getPassword().isEmpty()){
                     //Encode password before saving and update
-                    existingUserChat.setPassword(passwordEncoder.encode(updatedUserChat.getPassword()));
+                    existingUserChat.setPassword(securityConfig.passwordEncoder().encode(updatedUserChat.getPassword()));
                 }
 
                 UserChat savedUserChat = userRepository.save(existingUserChat);
