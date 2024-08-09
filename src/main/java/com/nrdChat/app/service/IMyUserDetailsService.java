@@ -1,10 +1,8 @@
 package com.nrdChat.app.service;
 
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 
-public interface IMyUserDetailsService extends UserDetailsService {
+public interface IMyUserDetailsService {
 
-    @Override
     UserDetails loadUserByUsername(String username);
 }

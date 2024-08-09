@@ -1,5 +1,6 @@
 package com.nrdChat.app.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.nrdChat.app.enums.UserRole;
 import com.nrdChat.app.enums.UserState;
 import jakarta.persistence.*;
@@ -24,7 +25,7 @@ public class UserChat implements UserDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long userId;
-    private String username;
+    private String name;
 
     @Column(unique = true, nullable = false)
     private String email;
@@ -34,6 +35,7 @@ public class UserChat implements UserDetails {
     private UserState userState;
 
     @OneToMany(mappedBy = "user")
+    @JsonIgnore
     private List<FriendEntity> friendEntityList;
 
     private String role;

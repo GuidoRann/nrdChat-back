@@ -3,6 +3,7 @@ package com.nrdChat.app.controller;
 import com.nrdChat.app.dtos.UserDTO;
 import com.nrdChat.app.model.UserChat;
 import com.nrdChat.app.service.IUserManagmentService;
+import com.nrdChat.app.service.UserManagementService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -13,33 +14,39 @@ import org.springframework.web.bind.annotation.*;
 public class UserController {
 
     @Autowired
-    IUserManagmentService userManagementService;
+    UserManagementService userManagementService;
 
     @PostMapping("/auth/register")
     public ResponseEntity<UserDTO> registerUser(@RequestBody UserDTO registrationRequest) {
-        UserDTO resp = userManagementService.registerUser(registrationRequest);
-        return ResponseEntity.ok(resp);
+        return ResponseEntity.ok(userManagementService.registerUser(registrationRequest));
     }
 
     @PostMapping("/auth/login")
     public ResponseEntity<UserDTO> loginUser(@RequestBody UserDTO loginRequest) {
-        UserDTO resp = userManagementService.loginUser(loginRequest);
-        return ResponseEntity.ok(resp);
+        return ResponseEntity.ok(userManagementService.loginUser(loginRequest));
     }
 
-    @GetMapping("/user/get-user/{userId}")
+    @PostMapping("/auth/refresh")
+    public ResponseEntity<UserDTO> refreshToken(@RequestBody UserDTO userDTO){
+      return ResponseEntity.ok(userManagementService.refreshToken(userDTO));
+    }
+
+    @GetMapping("/admin/get-all-users")
+    public ResponseEntity<UserDTO> getAllUsers() {
+        return ResponseEntity.ok(userManagementService.getAllUsers());
+    }
+
+    @GetMapping("/admin/get-user/{userId}")
     public ResponseEntity<UserDTO> getUsers(@PathVariable Long userId) {
-        UserDTO resp = userManagementService.getUserById(userId);
-        return ResponseEntity.ok(resp);
+        return ResponseEntity.ok(userManagementService.getUserById(userId));
     }
 
-    @PutMapping("/adminuser/update-user/{userId}")
+    @GetMapping("/adminuser/update-user/{userId}")
     public ResponseEntity<UserDTO> updateUser(@PathVariable Long userId, @RequestBody UserChat updatedUserChat) {
-        UserDTO resp = userManagementService.updateUser(userId, updatedUserChat);
-        return ResponseEntity.ok(resp);
+        return ResponseEntity.ok(userManagementService.updateUser(userId, updatedUserChat));
     }
 
-    @GetMapping("/user/get-profile")
+    @GetMapping("/adminuser/get-profile")
     public ResponseEntity<UserDTO> getMyProfile() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String email = authentication.getName();
@@ -49,8 +56,7 @@ public class UserController {
 
     @DeleteMapping("/admin/delete/{userId}")
     public ResponseEntity<UserDTO> deleteUser(@PathVariable Long userId) {
-        UserDTO resp = userManagementService.deleteUserById(userId);
-        return ResponseEntity.ok(resp);
+        return ResponseEntity.ok(userManagementService.deleteUserById(userId));
     }
 
 }

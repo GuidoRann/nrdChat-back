@@ -2,6 +2,7 @@ package com.nrdChat.config;
 
 import com.nrdChat.app.security.jwt.JwtAuthFilter;
 import com.nrdChat.app.service.IMyUserDetailsService;
+import com.nrdChat.app.service.MyUserDetailsService;
 import jakarta.security.auth.message.config.AuthConfig;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -28,21 +29,19 @@ public class SecurityConfig {
     private JwtAuthFilter jwtAuthFilter;
 
     @Autowired
-    private IMyUserDetailsService myUserDetailsService;
+    private MyUserDetailsService myUserDetailsService;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         return http
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(Customizer.withDefaults())
-                .authorizeHttpRequests(auth -> {
-                    auth.requestMatchers("/auth/**", "/public/**").permitAll();
-                    auth.requestMatchers("/admin/**").hasAnyAuthority("ADMIN");
-                    auth.requestMatchers("/user/**").hasAnyAuthority("USER");
-                    auth.requestMatchers("/adminuser/**").hasAnyAuthority("ADMIN", "USER");
-                    auth.anyRequest().authenticated();
-                })
-
+                .authorizeHttpRequests(auth ->
+                        auth.requestMatchers("/auth/**", "/public/**").permitAll()
+                                .requestMatchers("/admin/**").hasAnyAuthority("ADMIN")
+                                .requestMatchers("/user/**").hasAnyAuthority("USER")
+                                .requestMatchers("/adminuser/**").hasAnyAuthority("ADMIN", "USER")
+                                .anyRequest().authenticated())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationProvider(AuthenticationProvider()).addFilterBefore(
                         jwtAuthFilter, UsernamePasswordAuthenticationFilter.class

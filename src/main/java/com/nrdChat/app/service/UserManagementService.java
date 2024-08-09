@@ -10,7 +10,6 @@ import com.nrdChat.config.SecurityConfig;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
@@ -38,7 +37,7 @@ public class UserManagementService implements IUserManagmentService {
 
         try {
             UserChat userChat = UserChat.builder()
-                    .username(registrationRequest.getUsername())
+                    .name(registrationRequest.getName())
                     .email(registrationRequest.getEmail())
                     .password(securityConfig.passwordEncoder().encode(registrationRequest.getPassword()))
                     .role(UserRole.USER.toString())
@@ -58,20 +57,22 @@ public class UserManagementService implements IUserManagmentService {
             resp.setError(e.getMessage());
         }
 
-
         return resp;
     }
 
     @Override
     public UserDTO loginUser(UserDTO loginRequest) {
         UserDTO resp = new UserDTO();
+
         try {
             authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
                             loginRequest.getEmail(), loginRequest.getPassword()
                     )
             );
+
             Optional<UserChat> userOpt = userRepository.findByEmail(loginRequest.getEmail());
+
             if (userOpt.isPresent()) {
                 var user = userOpt.get();
                 var token = jwtUtils.generateToken(user);
@@ -83,7 +84,7 @@ public class UserManagementService implements IUserManagmentService {
                 resp.setRefreshToken(refreshToken);
                 resp.setExpirationTime("24h");
                 resp.setMessage("User logged in successfully");
-                user.setUserState(UserState.ONLINE);
+                resp.setUserState(UserState.ONLINE);
             } else {
                 resp.setStatusCode(401);
                 resp.setMessage("Invalid email or password");
@@ -131,7 +132,6 @@ public class UserManagementService implements IUserManagmentService {
                 resp.setUserChatList(userChatList);
                 resp.setStatusCode(200);
                 resp.setMessage("Successfully found users");
-                return resp;
             } else {
                 resp.setStatusCode(404);
                 resp.setMessage("No users found");
@@ -148,6 +148,7 @@ public class UserManagementService implements IUserManagmentService {
     @Override
     public UserDTO getUserById (Long userId){
         UserDTO resp = new UserDTO();
+
         try {
             UserChat user = userRepository.findById(userId).orElseThrow( () -> new RuntimeException("User not found")); ;
             resp.setUserChat(user);
@@ -157,7 +158,6 @@ public class UserManagementService implements IUserManagmentService {
             resp.setStatusCode(500);
             resp.setMessage("Error occurred: " + e.getMessage());
         }
-
         return resp;
     }
 
@@ -187,14 +187,12 @@ public class UserManagementService implements IUserManagmentService {
         UserDTO resp = new UserDTO();
         try {
             Optional<UserChat> user = userRepository.findById(userId);
-            if(user.isPresent()){
 
+            if(user.isPresent()){
                 UserChat existingUserChat = user.get();
-                existingUserChat.setUsername(updatedUserChat.getUsername());
+                existingUserChat.setName(updatedUserChat.getName());
                 existingUserChat.setEmail(updatedUserChat.getEmail());
-                existingUserChat.setPassword(updatedUserChat.getPassword());
                 existingUserChat.setRole(updatedUserChat.getRole());
-                existingUserChat.setUserState(updatedUserChat.getUserState());
 
                 //Check if password is not null and not empty
                 if(updatedUserChat.getPassword() != null && !updatedUserChat.getPassword().isEmpty()){
@@ -220,6 +218,7 @@ public class UserManagementService implements IUserManagmentService {
     @Override
     public UserDTO getMyInfo(String email){
         UserDTO resp = new UserDTO();
+
         try {
             Optional<UserChat> user = userRepository.findByEmail(email);
             if(user.isPresent()){
