@@ -146,11 +146,11 @@ public class UserManagementService implements IUserManagmentService {
     }
 
     @Override
-    public UserDTO getUserById (Long userId){
+    public UserDTO getUserByEmail(String email){
         UserDTO resp = new UserDTO();
 
         try {
-            UserChat user = userRepository.findById(userId).orElseThrow( () -> new RuntimeException("User not found")); ;
+            UserChat user = userRepository.findByEmail(email).orElseThrow( () -> new RuntimeException("User not found")); ;
             resp.setUserChat(user);
             resp.setStatusCode(200);
             resp.setMessage("User found successfully");

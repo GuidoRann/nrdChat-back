@@ -36,9 +36,9 @@ public class UserController {
         return ResponseEntity.ok(userManagementService.getAllUsers());
     }
 
-    @GetMapping("/admin/get-user/{userId}")
-    public ResponseEntity<UserDTO> getUsers(@PathVariable Long userId) {
-        return ResponseEntity.ok(userManagementService.getUserById(userId));
+    @GetMapping("/adminuser/get-user/{userEmail}")
+    public ResponseEntity<UserDTO> getUser(@PathVariable String userEmail) {
+        return ResponseEntity.ok(userManagementService.getUserByEmail(userEmail));
     }
 
     @GetMapping("/adminuser/update-user/{userId}")

@@ -12,7 +12,7 @@ public interface IUserManagmentService {
 
     public UserDTO getAllUsers();
 
-    public UserDTO getUserById(Long userId);
+    UserDTO getUserByEmail(String email);
 
     public UserDTO deleteUserById(Long userId);
 
