@@ -1,8 +1,7 @@
 package com.nrdChat.app.enums;
 
-public enum FriendState {
+public enum FriendshipState {
     PENDING,
     ACCEPTED,
-    BANNED,
-    REJECTED
+    REJECTED,
 }

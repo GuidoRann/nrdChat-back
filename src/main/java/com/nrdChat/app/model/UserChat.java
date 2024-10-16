@@ -36,10 +36,11 @@ public class UserChat implements UserDetails {
 
     @OneToMany(mappedBy = "user")
     @JsonIgnore
-    private List<FriendEntity> friendEntityList;
+    private List<FriendshipEntity> friendshipEntityList;
 
     private String role;
 
+    @JsonIgnore
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of(new SimpleGrantedAuthority(role));

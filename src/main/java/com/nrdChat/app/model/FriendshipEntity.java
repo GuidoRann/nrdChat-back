@@ -1,6 +1,6 @@
 package com.nrdChat.app.model;
 
-import com.nrdChat.app.enums.FriendState;
+import com.nrdChat.app.enums.FriendshipState;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -12,20 +12,20 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class FriendEntity {
+public class FriendshipEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long friendId;
+    private Long friendshipId;
 
     @ManyToOne
     @JoinColumn(name = "user_email", referencedColumnName = "email")
     private UserChat user;
 
     @ManyToOne
-    @JoinColumn(name = "friend_user_id", referencedColumnName = "userId")
+    @JoinColumn(name = "friend_email", referencedColumnName = "email")
     private UserChat friend;
 
     @Enumerated(EnumType.STRING)
-    private FriendState friendState;
+    private FriendshipState friendshipState;
 }
