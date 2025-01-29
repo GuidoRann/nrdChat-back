@@ -7,10 +7,8 @@ public interface IMessageManagementService {
 
     public MessageDTO saveMessage(MessageDTO messageDTO);
 
-    public MessageDTO updateMessage(MessageDTO messageDTO);
-
     public MessageDTO deleteMessage(Long messageId);
 
-    public MessageDTO getReceiverMessageBySender(UserChat receiver, UserChat sender);
+    public MessageDTO getAllMessages(UserChat receiver, UserChat sender);
 
 }

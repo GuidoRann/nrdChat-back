@@ -9,6 +9,7 @@ import com.nrdChat.app.model.UserChat;
 import lombok.Builder;
 import lombok.Data;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -25,6 +26,7 @@ public class MessageDTO {
     private MessageState messageState;
     private UserChat sender;
     private UserChat receiver;
+    private List<MessageEntity> messageList;
     private MessageEntity messageEntity;
 
 }

@@ -51,7 +51,7 @@ public class FriendshipManagementService implements IFriendshipManagementService
         FriendshipDTO resp = new FriendshipDTO();
 
         try {
-            List<FriendshipEntity> friendList = friendshipRepository.findAllFriendshipsByUserEmail( email );
+            List<FriendshipEntity> friendList = friendshipRepository.findAllFriendshipsByFriendEmail( email );
 
             if ( !friendList.isEmpty() ) {
                 resp.setFriendshipList(friendList);
@@ -107,6 +107,15 @@ public class FriendshipManagementService implements IFriendshipManagementService
             if ( friends.isPresent() ) {
                 friends.get().setFriendshipState( FriendshipState.ACCEPTED );
                 friendshipRepository.save( friends.get() );
+
+                FriendshipEntity reciprocalFriendship = FriendshipEntity.builder()
+                        .user(friend)          // Invertimos los roles
+                        .friend(user)
+                        .friendshipState(FriendshipState.ACCEPTED)
+                        .build();
+
+                friendshipRepository.save(reciprocalFriendship);
+
                 resp.setStatusCode( 200 );
                 resp.setMessage( "Friend accepted successfully" );
             } else {
