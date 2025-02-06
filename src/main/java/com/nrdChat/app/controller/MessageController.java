@@ -6,6 +6,7 @@ import com.nrdChat.app.service.MessageManagementService;
 import com.nrdChat.app.service.UserManagementService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
