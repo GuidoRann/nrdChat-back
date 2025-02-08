@@ -1,6 +1,7 @@
 package com.nrdChat.app.service;
 
 import com.nrdChat.app.dtos.MessageDTO;
+import com.nrdChat.app.enums.MessageState;
 import com.nrdChat.app.model.MessageEntity;
 import com.nrdChat.app.model.UserChat;
 import com.nrdChat.app.repository.MessageRepository;
@@ -25,7 +26,7 @@ public class MessageManagementService implements IMessageManagementService {
                     .content( messageDTO.getContent() )
                     .sendDate( messageDTO.getSendDate() )
 //                    .messageType( messageDTO.getMessageType() )
-//                    .messageState( messageDTO.getMessageState() )
+                    .messageState( MessageState.DELIVERED )
                     .sender( messageDTO.getSender() )
                     .receiver( messageDTO.getReceiver() )
                     .build();
@@ -67,25 +68,28 @@ public class MessageManagementService implements IMessageManagementService {
     }
 
     @Override
-    public MessageDTO getAllMessages( UserChat receiver, UserChat sender ) {
+    public MessageDTO getChatMessages(String senderEmail, String receiverEmail) {
         MessageDTO resp = new MessageDTO();
 
-        try{
-            List<MessageEntity> messages = messageRepository.findAllMessageByReceiverAndSender( receiver, sender );
+        try {
+            List<MessageEntity> messages = messageRepository.findChatMessages(senderEmail, receiverEmail);
 
-            if ( !messages.isEmpty() ){
-                resp.setMessageList( messages );
-                resp.setStatusCode( 200 );
+            if (!messages.isEmpty()) {
+                resp.setMessageList(messages);
+                resp.setMessage("Messages found successfully");
+                resp.setStatusCode(200);
             } else {
-                resp.setStatusCode( 500 );
-                resp.setMessage( "No messages found" );
+                resp.setStatusCode(404);
+                resp.setMessage("No messages found");
             }
 
-        } catch ( Exception e ) {
-            resp.setStatusCode( 500 );
-            resp.setError( e.getMessage() );
+        } catch (Exception e) {
+            resp.setStatusCode(500);
+            resp.setError(e.getMessage());
+            resp.setMessage("Error occurred: " + e.getMessage());
         }
 
         return resp;
     }
+
 }

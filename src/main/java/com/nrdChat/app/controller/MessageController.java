@@ -9,6 +9,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 public class MessageController {
 
@@ -28,14 +30,9 @@ public class MessageController {
         return ResponseEntity.ok( messageManagementService.deleteMessage( messageId ) );
     }
 
-    @GetMapping("/adminuser/get-messages")
-    public ResponseEntity<MessageDTO> getAllMessages(
-            @RequestParam String senderEmail,
-            @RequestParam String receiverEmail) {
-
-        UserChat sender = userManagementService.getUserByEmail( senderEmail ).getUserChat();
-        UserChat receiver = userManagementService.getUserByEmail( receiverEmail ).getUserChat();
-
-        return ResponseEntity.ok( messageManagementService.getAllMessages( sender, receiver ) );
+    @GetMapping("adminuser/get-messages/{senderEmail}/{receiverEmail}")
+    public ResponseEntity<MessageDTO> getChatMessages(@PathVariable String senderEmail, @PathVariable String receiverEmail) {
+        return ResponseEntity.ok( messageManagementService.getChatMessages( senderEmail, receiverEmail ) );
     }
+
 }
