@@ -1,16 +1,15 @@
 package com.nrdChat.app.service;
 
 import com.nrdChat.app.dtos.UserDTO;
+import com.nrdChat.app.dtos.UserRegistrationDTO;
 import com.nrdChat.app.model.UserChat;
 
-public interface IUserManagmentService {
-    public UserDTO registerUser(UserDTO registrationRequest);
+public interface IUserManagementService {
+    public UserDTO registerUser(UserRegistrationDTO registrationRequest);
 
-    public UserDTO loginUser(UserDTO loginRequest);
+    public UserDTO loginUser(UserRegistrationDTO loginRequest);
 
     public UserDTO refreshToken(UserDTO refreshTokenRequest);
-
-    public UserDTO getAllUsers();
 
     UserDTO getUserByEmail(String email);
 

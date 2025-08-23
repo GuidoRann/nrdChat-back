@@ -30,6 +30,10 @@ public class  MessageEntity {
     private MessageState messageState;
 
     @ManyToOne
+    @JoinColumn(name = "chat_id", referencedColumnName = "chatId")
+    private ChatEntity chat;
+
+    @ManyToOne
     @JoinColumn(name = "sender_id", referencedColumnName = "userId")
     private UserChat sender;
 

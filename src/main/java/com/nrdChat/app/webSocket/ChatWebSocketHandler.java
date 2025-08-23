@@ -1,5 +1,6 @@
 package com.nrdChat.app.webSocket;
 
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
@@ -8,13 +9,14 @@ import org.springframework.web.socket.handler.TextWebSocketHandler;
 import java.io.IOException;
 import java.util.concurrent.CopyOnWriteArraySet;
 
-public class ChatWebSocketHandle extends TextWebSocketHandler {
+public class ChatWebSocketHandler extends TextWebSocketHandler {
     private static final CopyOnWriteArraySet<WebSocketSession> sessions = new CopyOnWriteArraySet<>();
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) {
+        UserDetails user = (UserDetails) session.getAttributes().get("user");
+        System.out.println("New connection: " + user.getUsername());
         sessions.add(session);
-        System.out.println("New connection: " + session.getId());
     }
 
     @Override

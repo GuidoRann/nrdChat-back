@@ -9,8 +9,4 @@ public interface IMessageManagementService {
 
     public MessageDTO deleteMessage(Long messageId);
 
-    public MessageDTO getChatMessages(String senderEmail, String receiverEmail);
-
-//    public MessageDTO getAllMessages(UserChat receiver, UserChat sender);
-
 }

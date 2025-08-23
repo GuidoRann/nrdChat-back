@@ -1,6 +1,8 @@
 package com.nrdChat.app.service;
 
+import com.nrdChat.app.dtos.MessageDTO;
 import com.nrdChat.app.dtos.UserDTO;
+import com.nrdChat.app.dtos.UserRegistrationDTO;
 import com.nrdChat.app.enums.UserRole;
 import com.nrdChat.app.enums.UserState;
 import com.nrdChat.app.model.UserChat;
@@ -17,7 +19,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
-public class UserManagementService implements IUserManagmentService {
+public class UserManagementService implements IUserManagementService {
 
     @Autowired
     private UserRepository userRepository;
@@ -32,37 +34,40 @@ public class UserManagementService implements IUserManagmentService {
     private SecurityConfig securityConfig;
 
     @Override
-    public UserDTO registerUser(UserDTO registrationRequest) {
-        UserDTO resp = new UserDTO();
+    public UserDTO registerUser(UserRegistrationDTO registrationRequest) {
+        UserDTO resp;
 
         try {
             UserChat userChat = UserChat.builder()
-                    .name(registrationRequest.getName())
-                    .email(registrationRequest.getEmail())
-                    .password(securityConfig.passwordEncoder().encode(registrationRequest.getPassword()))
-                    .role(UserRole.USER.toString())
-                    .userState(UserState.OFFLINE)
+                    .name( registrationRequest.getName() )
+                    .email( registrationRequest.getEmail() )
+                    .password( securityConfig.passwordEncoder().encode(registrationRequest.getPassword()) )
+                    .role( UserRole.USER.toString() )
+                    .userState( UserState.OFFLINE )
                     .build();
 
             UserChat userRepo = userRepository.save(userChat);
 
-            if (userRepo.getUserId() > 0) {
-                resp.setUserChat(userRepo);
-                resp.setStatusCode(200);
-                resp.setMessage("User saved successfully");
-            }
+            resp = UserDTO.builder()
+                    .statusCode( userRepo.getUserId() > 0 ? 200 : 500 )
+                    .message( userRepo.getUserId() > 0
+                            ? "Message saved successfully"
+                            : "Logic error: Message not saved" )
+                    .build();
 
         } catch (Exception e) {
-            resp.setStatusCode(500);
-            resp.setError(e.getMessage());
+            resp = UserDTO.builder()
+                    .statusCode( 500 )
+                    .error( e.getMessage() )
+                    .build();
         }
 
         return resp;
     }
 
     @Override
-    public UserDTO loginUser(UserDTO loginRequest) {
-        UserDTO resp = new UserDTO();
+    public UserDTO loginUser(UserRegistrationDTO loginRequest) {
+        UserDTO resp;
 
         try {
             authenticationManager.authenticate(
@@ -71,169 +76,208 @@ public class UserManagementService implements IUserManagmentService {
                     )
             );
 
-            Optional<UserChat> userOpt = userRepository.findByEmail(loginRequest.getEmail());
+            UserChat user = userRepository.findByEmail( loginRequest.getEmail() )
+                    .orElseThrow( () -> new RuntimeException("Invalid email or password") );
 
-            if (userOpt.isPresent()) {
-                var user = userOpt.get();
-                var token = jwtUtils.generateToken(user);
-                var refreshToken = jwtUtils.generateRefreshToken(new HashMap<>(), user);
+            String token = jwtUtils.generateToken( user );
+            String refreshToken = jwtUtils.generateRefreshToken(new HashMap<>(), user );
 
-                resp.setStatusCode(200);
-                resp.setToken(token);
-                resp.setRole(user.getRole());
-                resp.setRefreshToken(refreshToken);
-                resp.setExpirationTime("24h");
-                resp.setMessage("User logged in successfully");
-                resp.setUserState(UserState.ONLINE);
-            } else {
-                resp.setStatusCode(401);
-                resp.setMessage("Invalid email or password");
-            }
+                resp = UserDTO.builder()
+                        .statusCode( user.getUserId() > 0 ? 200 : 401 )
+                        .message( user.getUserId() > 0
+                                ? "User logged in successfully"
+                                : "Logic error: Invalid email or password" )
+
+                        .name( user.getName() )
+                        .email( user.getEmail() )
+                        .token( token )
+                        .refreshToken( refreshToken )
+                        .expirationTime( "24h" )
+                        .role( user.getRole() )
+                        .userState( UserState.ONLINE )
+                        .build();
+
         } catch (Exception e) {
-            resp.setStatusCode(500);
-            resp.setMessage(e.getMessage());
+            resp = UserDTO.builder()
+                    .statusCode( 500 )
+                    .error( e.getMessage() )
+                    .build();
         }
+
         return resp;
     }
 
     @Override
     public UserDTO refreshToken(UserDTO refreshTokenRequest) {
-        UserDTO resp = new UserDTO();
+        UserDTO resp;
         try {
-            String userEmail = jwtUtils.extractUsername(refreshTokenRequest.getRefreshToken());
-            var user = userRepository.findByEmail(userEmail).orElseThrow();
+            String userEmail = jwtUtils.extractUsername( refreshTokenRequest.getRefreshToken() );
+            var user = userRepository.findByEmail( userEmail ).orElseThrow();
 
             if (jwtUtils.isTokenValid(refreshTokenRequest.getRefreshToken(), user)) {
                 var token = jwtUtils.generateToken(user);
-                resp.setStatusCode(200);
-                resp.setToken(token);
-                resp.setRefreshToken(refreshTokenRequest.getRefreshToken());
-                resp.setExpirationTime("24h");
-                resp.setMessage("User logged in successfully");
-                user.setUserState(UserState.ONLINE);
-            }
-
-            resp.setStatusCode(200);
-            return resp;
-
-        } catch (Exception e) {
-            resp.setStatusCode(500);
-            resp.setMessage(e.getMessage());
-            return resp;
-        }
-    }
-
-    @Override
-    public UserDTO getAllUsers() {
-        UserDTO resp = new UserDTO();
-        try {
-            List<UserChat> userChatList = userRepository.findAll();
-            if(!userChatList.isEmpty()){
-                resp.setUserChatList(userChatList);
-                resp.setStatusCode(200);
-                resp.setMessage("Successfully found users");
+                resp = UserDTO.builder()
+                        .statusCode( 200 )
+                        .token( token )
+                        .refreshToken( refreshTokenRequest.getRefreshToken() )
+                        .expirationTime("24h")
+                        .message( "User logged in successfully" )
+                        .name( user.getName() )
+                        .email( user.getEmail() )
+                        .role( user.getRole() )
+                        .userState(UserState.ONLINE)
+                        .build();
             } else {
-                resp.setStatusCode(404);
-                resp.setMessage("No users found");
+                resp = UserDTO.builder()
+                        .statusCode(401)
+                        .message("Invalid or expired refresh token")
+                        .build();
             }
-            return resp;
 
         } catch (Exception e) {
-            resp.setStatusCode(500);
-            resp.setMessage("Error occurred: " + e.getMessage());
+            resp = UserDTO.builder()
+                    .statusCode( 500 )
+                    .error( e.getMessage() )
+                    .build();
+
             return resp;
         }
-    }
 
-    @Override
-    public UserDTO getUserByEmail(String email){
-        UserDTO resp = new UserDTO();
-
-        try {
-            UserChat user = userRepository.findByEmail(email).orElseThrow( () -> new RuntimeException("User not found")); ;
-            resp.setUserChat(user);
-            resp.setStatusCode(200);
-            resp.setMessage("User found successfully");
-        } catch (Exception e) {
-            resp.setStatusCode(500);
-            resp.setMessage("Error occurred: " + e.getMessage());
-        }
         return resp;
     }
 
     @Override
-    public UserDTO deleteUserById (Long userId){
-        UserDTO resp = new UserDTO();
-        try {
-            Optional<UserChat> user = userRepository.findById(userId);
-            if(user.isPresent()){
-                userRepository.delete(user.get()); // try with deleteById if not working
-                resp.setStatusCode(200);
-                resp.setMessage("User deleted successfully");
-            }else {
-                resp.setStatusCode(404);
-                resp.setMessage("User not found");
-            }
+    public UserDTO getUserByEmail( String email ){
+        UserDTO resp;
 
+        try {
+            UserChat user = userRepository.findByEmail( email ).orElseThrow( () -> new RuntimeException( "User not found" ) );
+            resp = UserDTO.builder()
+                    .email( user.getEmail() )
+                    .name( user.getName() )
+                    .statusCode( user.getUserId() > 0 ? 200 : 404 )
+                    .message( user.getUserId() > 0
+                            ? "User found successfully"
+                            : "Logic error: User not found" )
+                    .build();
         } catch (Exception e) {
-            resp.setStatusCode(500);
-            resp.setMessage("Error occurred: " + e.getMessage());
+            resp = UserDTO.builder()
+                    .statusCode( 500 )
+                    .error( e.getMessage() )
+                    .build();
         }
+
         return resp;
     }
 
     @Override
-    public UserDTO updateUser(Long userId, UserChat updatedUserChat){
-        UserDTO resp = new UserDTO();
+    public UserDTO deleteUserById ( Long userId ){
+        UserDTO resp;
+
         try {
-            Optional<UserChat> user = userRepository.findById(userId);
+            UserChat user = userRepository.findById( userId ).orElseThrow( () -> new RuntimeException( "User not found") );
 
-            if(user.isPresent()){
-                UserChat existingUserChat = user.get();
-                existingUserChat.setName(updatedUserChat.getName());
-                existingUserChat.setEmail(updatedUserChat.getEmail());
-                existingUserChat.setRole(updatedUserChat.getRole());
+            userRepository.delete( user );
 
-                //Check if password is not null and not empty
-                if(updatedUserChat.getPassword() != null && !updatedUserChat.getPassword().isEmpty()){
+            resp = UserDTO.builder()
+                    .statusCode( user.getUserId() > 0 ? 200 : 404 )
+                    .message( user.getUserId() > 0
+                            ? "User deleted successfully"
+                            : "Logic error: User not found" )
+                    .build();
+
+        } catch (Exception e) {
+            resp = UserDTO.builder()
+                    .statusCode( 500 )
+                    .error( e.getMessage() )
+                    .build();
+        }
+
+        return resp;
+    }
+
+    @Override
+    public UserDTO updateUser( Long userId, UserChat updatedUserChat ){
+        UserDTO resp;
+        try {
+            UserChat existingUserChat = userRepository.findById( userId ).orElseThrow( () -> new RuntimeException( "User not found") );
+
+                existingUserChat.setName( updatedUserChat.getName() );
+                existingUserChat.setEmail( updatedUserChat.getEmail() );
+                existingUserChat.setRole( updatedUserChat.getRole() );
+
+                if( updatedUserChat.getPassword() != null && !updatedUserChat.getPassword().isEmpty() ){
+
                     //Encode password before saving and update
-                    existingUserChat.setPassword(securityConfig.passwordEncoder().encode(updatedUserChat.getPassword()));
+                    existingUserChat.setPassword( securityConfig.passwordEncoder().encode( updatedUserChat.getPassword() ) );
                 }
 
-                UserChat savedUserChat = userRepository.save(existingUserChat);
-                resp.setUserChat(savedUserChat);
-                resp.setStatusCode(200);
-                resp.setMessage("User updated successfully");
-            }else {
-                resp.setStatusCode(404);
-                resp.setMessage("User not found");
-            }
+                UserChat savedUserChat = userRepository.save( existingUserChat );
+                resp = UserDTO.builder()
+                        .statusCode( savedUserChat.getUserId() > 0 ? 200 : 404 )
+                        .message( savedUserChat.getUserId() > 0
+                                ? "User updated successfully"
+                                : "Logic error: User not found" )
+                        .build();
+
         } catch (Exception e) {
-            resp.setStatusCode(500);
-            resp.setMessage("Error occurred: " + e.getMessage());
+            resp = UserDTO.builder()
+                    .statusCode( 500 )
+                    .error( e.getMessage() )
+                    .build();
         }
+
         return resp;
     }
 
     @Override
     public UserDTO getMyInfo(String email){
-        UserDTO resp = new UserDTO();
+        UserDTO resp;
 
         try {
-            Optional<UserChat> user = userRepository.findByEmail(email);
-            if(user.isPresent()){
-                resp.setUserChat(user.get());
-                resp.setStatusCode(200);
-                resp.setMessage("User found successfully");
-            }else {
-                resp.setStatusCode(404);
-                resp.setMessage("User not found");
-            }
+            UserChat user = userRepository.findByEmail( email ).orElseThrow( () -> new RuntimeException( "User not found") );
+                resp = UserDTO.builder()
+                        .email( user.getEmail() )
+                        .name( user.getName() )
+                        .role( user.getRole() )
+                        .userState( user.getUserState() )
+                        .statusCode( user.getUserId() > 0 ? 200 : 404 )
+                        .message( user.getUserId() > 0
+                                ? "User found successfully"
+                                : "Logic error: User not found" )
+                        .build();
 
         } catch (Exception e) {
-            resp.setStatusCode(500);
-            resp.setMessage("Error occurred: " + e.getMessage());
+            resp = UserDTO.builder()
+                    .statusCode( 500 )
+                    .error( e.getMessage() )
+                    .build();
         }
+
         return resp;
     }
+
+//   -----------OLD CODE-----------
+//    @Override
+//    public UserDTO getMyInfo(String email){
+//        UserDTO resp = new UserDTO();
+//
+//        try {
+//            Optional<UserChat> user = userRepository.findByEmail(email);
+//            if(user.isPresent()){
+//                resp.setUserChat(user.get());
+//                resp.setStatusCode(200);
+//                resp.setMessage("User found successfully");
+//            }else {
+//                resp.setStatusCode(404);
+//                resp.setMessage("User not found");
+//            }
+//
+//        } catch (Exception e) {
+//            resp.setStatusCode(500);
+//            resp.setMessage("Error occurred: " + e.getMessage());
+//        }
+//        return resp;
+//    }
+
 }

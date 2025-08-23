@@ -30,9 +30,4 @@ public class MessageController {
         return ResponseEntity.ok( messageManagementService.deleteMessage( messageId ) );
     }
 
-    @GetMapping("adminuser/get-messages/{senderEmail}/{receiverEmail}")
-    public ResponseEntity<MessageDTO> getChatMessages(@PathVariable String senderEmail, @PathVariable String receiverEmail) {
-        return ResponseEntity.ok( messageManagementService.getChatMessages( senderEmail, receiverEmail ) );
-    }
-
 }

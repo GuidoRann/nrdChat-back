@@ -17,6 +17,7 @@ public class FriendshipDTO {
     private int statusCode;
     private String error;
     private String message;
+
     private UserChat user;
     private UserChat friend;
     private FriendshipEntity friendship;

@@ -1,8 +1,8 @@
 package com.nrdChat.app.controller;
 
 import com.nrdChat.app.dtos.UserDTO;
+import com.nrdChat.app.dtos.UserRegistrationDTO;
 import com.nrdChat.app.model.UserChat;
-import com.nrdChat.app.service.IUserManagmentService;
 import com.nrdChat.app.service.UserManagementService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -17,12 +17,12 @@ public class UserController {
     UserManagementService userManagementService;
 
     @PostMapping("/auth/register")
-    public ResponseEntity<UserDTO> registerUser(@RequestBody UserDTO registrationRequest) {
+    public ResponseEntity<UserDTO> registerUser(@RequestBody UserRegistrationDTO registrationRequest) {
         return ResponseEntity.ok(userManagementService.registerUser(registrationRequest));
     }
 
     @PostMapping("/auth/login")
-    public ResponseEntity<UserDTO> loginUser(@RequestBody UserDTO loginRequest) {
+    public ResponseEntity<UserDTO> loginUser(@RequestBody UserRegistrationDTO loginRequest) {
         return ResponseEntity.ok(userManagementService.loginUser(loginRequest));
     }
 
@@ -31,14 +31,9 @@ public class UserController {
       return ResponseEntity.ok(userManagementService.refreshToken(userDTO));
     }
 
-    @GetMapping("/admin/get-all-users")
-    public ResponseEntity<UserDTO> getAllUsers() {
-        return ResponseEntity.ok(userManagementService.getAllUsers());
-    }
-
     @GetMapping("/adminuser/get-user/{userEmail}")
     public ResponseEntity<UserDTO> getUser(@PathVariable String userEmail) {
-        return ResponseEntity.ok(userManagementService.getUserByEmail(userEmail));
+        return ResponseEntity.ok(userManagementService.getUserByEmail( userEmail ));
     }
 
     @GetMapping("/adminuser/update-user/{userId}")
