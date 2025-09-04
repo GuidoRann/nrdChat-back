@@ -2,18 +2,26 @@ package com.nrdChat.app.service;
 
 import com.nrdChat.app.dtos.FriendshipDTO;
 import com.nrdChat.app.enums.FriendshipState;
+import com.nrdChat.app.mapper.DtoMapper;
 import com.nrdChat.app.model.FriendshipEntity;
 import com.nrdChat.app.model.UserChat;
 import com.nrdChat.app.repository.FriendshipRepository;
 import com.nrdChat.app.repository.UserRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
+
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 @Service
+@Transactional
 public class FriendshipManagementService implements IFriendshipManagementService {
 
     @Autowired
@@ -22,26 +30,46 @@ public class FriendshipManagementService implements IFriendshipManagementService
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private SimpMessagingTemplate messagingTemplate;
+
     @Override
     public FriendshipDTO saveFriend( UserChat user, UserChat friend ) {
         FriendshipDTO resp = new FriendshipDTO();
 
+            UserChat userDb = userRepository.findByEmail( user.getEmail() )
+                    .orElseThrow(() -> new RuntimeException("User not found: " + user.getEmail()));
+
+            UserChat friendDb = userRepository.findByEmail( friend.getEmail() )
+                    .orElseThrow(() -> new RuntimeException("Friend not found: " + friend.getEmail()));
+
         try {
             FriendshipEntity newFriend = FriendshipEntity.builder()
-                    .user( user )
-                    .friend( friend )
+                    .user( userDb )
+                    .friend( friendDb )
                     .friendshipState( FriendshipState.PENDING )
                     .build();
+
             FriendshipEntity savedFriend = friendshipRepository.save( newFriend );
 
             if ( savedFriend.getFriendshipId() > 0 ) {
-                resp.setFriendship( savedFriend );
+                FriendshipDTO friendshipDTO = DtoMapper.toFriendshipDTO( savedFriend );
+
+                resp.setFriendship( friendshipDTO );
                 resp.setStatusCode( 200 );
                 resp.setMessage( "Friend added successfully" );
+
+                messagingTemplate.convertAndSendToUser(
+                        friendDb.getEmail(),
+                        "/queue/friend-requests",
+                        friendshipDTO
+                );
             }
         } catch ( Exception e ) {
-            resp.setStatusCode( 500 );
-            resp.setMessage( "Error occurred: " + e.getMessage() );
+            resp = FriendshipDTO.builder()
+                    .statusCode( 500 )
+                    .message( "Error occurred: " + e.getMessage() )
+                    .build();
         }
 
         return resp;
@@ -49,20 +77,28 @@ public class FriendshipManagementService implements IFriendshipManagementService
 
     @Override
     public FriendshipDTO getAllAcceptedFriends( String email ) {
-        FriendshipDTO resp = new FriendshipDTO();
+        FriendshipDTO resp;
 
         try {
             List<FriendshipEntity> acceptedFriends = friendshipRepository.findByUserEmailAndFriendshipState( email, FriendshipState.ACCEPTED );
 
-            resp.setAcceptedFriendsList( acceptedFriends );
-            resp.setStatusCode( 200 );
-            resp.setMessage( acceptedFriends.isEmpty()
-                    ? "No accepted friendships found"
-                    : "Successfully found accepted friendships" );
+            List<FriendshipDTO> acceptedDtoList = acceptedFriends.stream()
+                    .map( DtoMapper::toFriendshipDTO )
+                    .toList();
+
+            resp = FriendshipDTO.builder()
+                    .AcceptedFriendsList( acceptedDtoList )
+                    .statusCode( 200 )
+                    .message( acceptedDtoList.isEmpty()
+                           ? "No accepted friendships found"
+                           : "Successfully found accepted friendships" )
+                    .build();
 
         } catch (Exception e) {
-            resp.setStatusCode( 500 );
-            resp.setMessage( "Error occurred: " + e.getMessage() );
+            resp = FriendshipDTO.builder()
+                    .statusCode( 500 )
+                    .message( "Error occurred: " + e.getMessage() )
+                    .build();
         }
 
         return resp;
@@ -71,50 +107,59 @@ public class FriendshipManagementService implements IFriendshipManagementService
 
     @Override
     public FriendshipDTO getAllPendingFriends( String email ) {
-        FriendshipDTO resp = new FriendshipDTO();
+        FriendshipDTO resp;
 
         try {
             List<FriendshipEntity> pendingFriendList = friendshipRepository.findByFriendEmailAndFriendshipState( email, FriendshipState.PENDING );
 
-            resp.setPendingFriendsList( pendingFriendList );
-            resp.setStatusCode( 200 );
+            List<FriendshipDTO> pendingDtoList = pendingFriendList.stream()
+                    .map( DtoMapper::toFriendshipDTO )
+                    .toList();
 
-            if ( pendingFriendList.isEmpty() ) {
-                resp.setMessage("No pending friendships found");
-            } else {
-                resp.setMessage("Successfully found pending friendships");
-            }
+            resp = FriendshipDTO.builder()
+                    .PendingFriendsList( pendingDtoList )
+                    .statusCode( 200 )
+                    .message( pendingDtoList.isEmpty()
+                            ? "No pending friendships found"
+                            : "Successfully found pending friendships" )
+                    .build();
 
         } catch ( Exception e ) {
-            resp.setStatusCode( 500 );
-            resp.setMessage( "Error occurred: " + e.getMessage() );
-            return resp;
+            resp = FriendshipDTO.builder()
+                    .statusCode( 500 )
+                    .message( "Error occurred: " + e.getMessage() )
+                    .build();
         }
-
         return resp;
     }
 
     @Override
     public FriendshipDTO getAllSentRequests( String email ) {
-        FriendshipDTO resp = new FriendshipDTO();
+        FriendshipDTO resp;
 
         try {
             List<FriendshipEntity> sentList = friendshipRepository.findByUserEmailAndFriendshipState( email, FriendshipState.PENDING );
-            if ( !sentList.isEmpty() ) {
-                resp.setSentRequestsList( sentList );
-                resp.setStatusCode( 200 );
-                resp.setMessage("Successfully found sent requests");
-            } else {
-                resp.setSentRequestsList(Collections.emptyList());
-                resp.setStatusCode( 200 );
-                resp.setMessage("No sent requests found");
-            }
-        } catch (Exception e) {
-            resp.setStatusCode( 500 );
-            resp.setMessage( "Error occurred: " + e.getMessage() );
-            return resp;
-        }
 
+            List<FriendshipDTO> sentDtoList = sentList == null
+                    ? Collections.emptyList()
+                    : sentList.stream()
+                    .map( DtoMapper::toFriendshipDTO )
+                    .toList();
+
+            resp = FriendshipDTO.builder()
+                    .SentRequestsList( sentDtoList )
+                    .statusCode( 200 )
+                    .message( sentDtoList.isEmpty()
+                            ? "No sent requests found"
+                            : "Successfully found sent requests" )
+                    .build();
+
+        } catch (Exception e) {
+            resp = FriendshipDTO.builder()
+                    .statusCode( 500 )
+                    .message( "Error occurred: " + e.getMessage() )
+                    .build();
+        }
         return resp;
     }
 
@@ -122,19 +167,32 @@ public class FriendshipManagementService implements IFriendshipManagementService
     public FriendshipDTO acceptFriend( UserChat user, UserChat friend ) {
         FriendshipDTO resp = new FriendshipDTO();
 
+        UserChat userDb = userRepository.findByEmail( user.getEmail() )
+                .orElseThrow(() -> new RuntimeException("User not found: " + user.getEmail()));
+
+        UserChat friendDb = userRepository.findByEmail( friend.getEmail() )
+                .orElseThrow(() -> new RuntimeException("Friend not found: " + friend.getEmail()));
+
         try {
-            Optional<FriendshipEntity> friends = friendshipRepository.findFriendshipByUserEmailAndFriendEmail( user.getEmail(), friend.getEmail() );
+            Optional<FriendshipEntity> friends = friendshipRepository.findFriendshipByUserEmailAndFriendEmail( userDb.getEmail(), friendDb.getEmail() );
+
             if ( friends.isPresent() ) {
                 friends.get().setFriendshipState( FriendshipState.ACCEPTED );
                 friendshipRepository.save( friends.get() );
 
                 FriendshipEntity reciprocalFriendship = FriendshipEntity.builder()
-                        .user( friend )          // Invertimos los roles
-                        .friend( user )
+                        .user( friendDb )          // Invertimos los roles
+                        .friend( userDb )
                         .friendshipState( FriendshipState.ACCEPTED )
                         .build();
 
-                friendshipRepository.save(reciprocalFriendship);
+                friendshipRepository.save( reciprocalFriendship );
+
+                messagingTemplate.convertAndSendToUser(
+                        friendDb.getEmail(),  // el que originalmente envió la request
+                        "/queue/friend-requests-updates",
+                        DtoMapper.toFriendshipDTO( friends.get() )
+                );
 
                 resp.setStatusCode( 200 );
                 resp.setMessage( "Friend accepted successfully" );
@@ -150,7 +208,7 @@ public class FriendshipManagementService implements IFriendshipManagementService
     }
 
     @Override
-    public void deleteFriend(UserChat user, UserChat friend ) {
+    public void deleteFriend( UserChat user, UserChat friend ) {
         FriendshipDTO resp = new FriendshipDTO();
 
         try {
@@ -169,6 +227,6 @@ public class FriendshipManagementService implements IFriendshipManagementService
             resp.setStatusCode( 500 );
             resp.setMessage( "Error occurred: " + e.getMessage() );
         }
-
     }
+
 }

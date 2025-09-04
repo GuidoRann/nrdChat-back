@@ -1,7 +1,9 @@
 package com.nrdChat.app.mapper;
 
+import com.nrdChat.app.dtos.FriendshipDTO;
 import com.nrdChat.app.dtos.MessageDTO;
 import com.nrdChat.app.dtos.UserDTO;
+import com.nrdChat.app.model.FriendshipEntity;
 import com.nrdChat.app.model.MessageEntity;
 import com.nrdChat.app.model.UserChat;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -9,35 +11,25 @@ import org.springframework.security.core.userdetails.UserDetails;
 public class DtoMapper {
 
     // ================== USER ==================
-    public static UserDTO toUserDTO(UserChat user) {
+    public static UserDTO toUserDTO( UserChat user ) {
         if (user == null) return null;
 
         return UserDTO.builder()
-                .id(user.getUserId())
-                .email(user.getEmail())
-                .name(user.getUsername())
-                .role(user.getRole())
-                .userState(user.getUserState())
+                .id( user.getUserId() )
+                .email( user.getEmail() )
+                .name( user.getName() )
+                .role( user.getRole())
+                .userState( user.getUserState() )
                 .build();
     }
 
-    // Convierte UserDetails (Spring Security) → UserDTO
-    public static UserDTO toUserDTO(UserDetails userDetails) {
-        if (userDetails == null) return null;
-
-        return UserDTO.builder()
-                .email(userDetails.getUsername())
-                .name(userDetails.getAuthorities().toString())
-                .build();
-    }
-
-    public static UserChat toUserEntity(UserDTO dto) {
-        if (dto == null) return null;
+    public static UserChat toUserEntity( UserDTO dto ) {
+        if ( dto == null ) return null;
 
         return UserChat.builder()
-                .userId(dto.getId())
-                .email(dto.getEmail())
-                .name(dto.getName())
+                .userId( dto.getId() )
+                .email( dto.getEmail() )
+                .name( dto.getName() )
                 .build();
     }
 
@@ -69,6 +61,18 @@ public class DtoMapper {
                 .messageState(dto.getMessageState())
                 .sender(toUserEntity(dto.getSender()))
                 .receiver(toUserEntity(dto.getReceiver()))
+                .build();
+    }
+
+    // ================== FRIENDSHIP ==================
+    public static FriendshipDTO toFriendshipDTO( FriendshipEntity entity ) {
+        if ( entity == null ) return null;
+
+        return FriendshipDTO.builder()
+                .user( toUserDTO( entity.getUser() ) )
+                .friend( toUserDTO( entity.getFriend() ) )
+                .friendshipState( entity.getFriendshipState() )
+                .statusCode( 200 )
                 .build();
     }
 }

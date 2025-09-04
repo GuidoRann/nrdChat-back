@@ -16,6 +16,6 @@ public interface IFriendshipManagementService {
 
     FriendshipDTO acceptFriend( UserChat user, UserChat friend );
 
-    void deleteFriend(UserChat user, UserChat friend );
+    void deleteFriend( UserChat user, UserChat friend );
 
 }

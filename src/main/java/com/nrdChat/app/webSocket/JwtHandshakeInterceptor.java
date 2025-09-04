@@ -1,4 +1,4 @@
-package com.nrdChat.app.security.websocket;
+package com.nrdChat.app.webSocket;
 
 import com.nrdChat.app.security.jwt.JwtUtils;
 import com.nrdChat.app.service.MyUserDetailsService;

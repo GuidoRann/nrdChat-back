@@ -5,11 +5,17 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.nrdChat.app.enums.FriendshipState;
 import com.nrdChat.app.model.FriendshipEntity;
 import com.nrdChat.app.model.UserChat;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.List;
 
 @Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class FriendshipDTO {
@@ -18,11 +24,13 @@ public class FriendshipDTO {
     private String error;
     private String message;
 
-    private UserChat user;
-    private UserChat friend;
-    private FriendshipEntity friendship;
-    private List<FriendshipEntity> AcceptedFriendsList;
-    private List<FriendshipEntity> PendingFriendsList;
-    private List<FriendshipEntity> SentRequestsList;
+    private UserDTO user;
+    private UserDTO friend;
+
+    private FriendshipDTO friendship;
+    private List<FriendshipDTO> AcceptedFriendsList;
+    private List<FriendshipDTO> PendingFriendsList;
+    private List<FriendshipDTO> SentRequestsList;
+
     private FriendshipState friendshipState;
 }

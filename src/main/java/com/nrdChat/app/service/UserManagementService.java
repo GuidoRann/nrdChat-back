@@ -160,6 +160,7 @@ public class UserManagementService implements IUserManagementService {
                             ? "User found successfully"
                             : "Logic error: User not found" )
                     .build();
+
         } catch (Exception e) {
             resp = UserDTO.builder()
                     .statusCode( 500 )

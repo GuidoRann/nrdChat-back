@@ -32,9 +32,9 @@ public class ChatController {
         var senderUser = up.getUserChat();
         var displayName = up.getDisplayName();
 
-        message.setSender(DtoMapper.toUserDTO(senderUser));
+        message.setSender( DtoMapper.toUserDTO( senderUser ) );
 
-        MessageDTO savedMessage = messageService.saveMessage(message);
+        MessageDTO savedMessage = messageService.saveMessage( message );
 
         simpMessagingTemplate.convertAndSendToUser(
                 savedMessage.getReceiver().getEmail(),
